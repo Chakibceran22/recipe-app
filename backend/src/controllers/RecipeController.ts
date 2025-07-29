@@ -32,8 +32,8 @@ export class RecipeController {
   }
 
   async createRecipe(
-    req: Request<Recipe>,
-    res: Response<Recipe | { error: string }>
+    req: Request<{},{},Omit<Recipe, 'id'>>,
+    res: Response<Recipe | { error: any }>
   ) {
     const recipeData = req.body;
     try {
@@ -42,7 +42,7 @@ export class RecipeController {
     } catch (error) {
       res
         .status(500)
-        .json({ error: "An error occurred while creating the recipe." });
+        .json({ error: error });
     }
   }
 }

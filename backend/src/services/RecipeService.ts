@@ -1,5 +1,6 @@
 import { Recipe } from "../generated/prisma";
 import { PrismaClient } from "../generated/prisma";
+import { mapDifficultyToEnum } from "../utils/MappingDiffToEnum";
 export class RecipeService {
     constructor(private prisma: PrismaClient) {}
     async getRecipes() : Promise<Recipe[]> {
@@ -15,8 +16,12 @@ export class RecipeService {
     }
 
     async createRecipe(data: Omit<Recipe, 'id'>): Promise<Recipe>{
+        const transformeddata = {
+            ...data,
+            difficulty: mapDifficultyToEnum(data.difficulty)
+        }
         const newRecipe = await this.prisma.recipe.create({
-            data
+            data: transformeddata
         })
         return newRecipe;
     }
