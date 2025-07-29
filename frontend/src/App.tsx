@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Clock, Users, ChefHat, Search, X, ChevronDown } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-
+import { getRecipes } from './services/RecipeServices';
 export interface Recipe {
   id: number;
   title: string;
@@ -23,86 +23,101 @@ export interface Recipe {
   instructions: string[];
 }
 
-const sampleRecipes: Recipe[] = [
-  {
-    id: 1,
-    title: "Creamy Mushroom Risotto",
-    description: "A rich and creamy Italian risotto with wild mushrooms and fresh herbs. Perfect comfort food for any season.",
-    image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&h=400&fit=crop",
-    cookTime: 35 ,
-    difficulty: "Medium",
-    servings: 4,
-    category: "Italian",
-    ingredients: ["2 cups Arborio rice", "8 oz wild mushrooms, sliced", "6 cups warm vegetable stock", "1/2 cup white wine", "1 cup grated Parmesan cheese", "1 medium onion, diced", "3 cloves garlic, minced", "2 tbsp fresh thyme"],
-    instructions: ["Heat the vegetable stock in a large saucepan and keep warm", "In a heavy-bottomed pan, sauté diced onions and minced garlic until translucent", "Add Arborio rice and toast for 2-3 minutes until edges are translucent", "Pour in white wine and stir until absorbed", "Add warm stock one ladle at a time, stirring constantly", "Fold in sautéed mushrooms and Parmesan cheese, season to taste"]
-  },
-  {
-    id: 2,
-    title: "Spicy Thai Green Curry",
-    description: "Authentic Thai green curry with coconut milk, vegetables, and aromatic herbs. A burst of Southeast Asian flavors.",
-    image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&h=400&fit=crop",
-    cookTime: 25 ,
-    difficulty: "Easy",
-    servings: 3,
-    category: "Thai",
-    ingredients: ["3 tbsp green curry paste", "400ml coconut milk", "500g chicken breast, sliced", "1 cup Thai basil leaves", "2 tbsp fish sauce", "1 tbsp palm sugar", "2 Thai eggplants, quartered", "2 red chilies, sliced"],
-    instructions: ["Heat 2 tbsp oil in a wok and fry curry paste for 1 minute", "Add thick coconut milk and bring to a gentle simmer", "Add sliced chicken and cook for 5-7 minutes until tender", "Add vegetables and remaining coconut milk", "Season with fish sauce and palm sugar to taste", "Garnish with fresh Thai basil and serve with jasmine rice"]
-  },
-  {
-    id: 3,
-    title: "Classic French Ratatouille",
-    description: "Traditional Provençal vegetable stew with Mediterranean flavors. A healthy and colorful dish full of summer vegetables.",
-    image: "https://images.unsplash.com/photo-1572441713132-51c75654db73?w=600&h=400&fit=crop",
-    cookTime: 45,
-    difficulty: "Medium",
-    servings: 6,
-    category: "French",
-    ingredients: ["2 medium eggplants, cubed", "3 zucchini, sliced", "2 bell peppers, chopped", "4 large tomatoes, chopped", "2 onions, sliced", "4 cloves garlic, minced", "2 tsp herbs de Provence", "1/4 cup olive oil"],
-    instructions: ["Preheat oven to 375°F (190°C)", "Sauté onions and garlic in olive oil until fragrant", "Layer all vegetables in a baking dish", "Drizzle with olive oil and season with herbs", "Cover and bake for 35-40 minutes until vegetables are tender", "Serve hot as a main dish or side"]
-  },
-  {
-    id: 4,
-    title: "Japanese Chicken Teriyaki",
-    description: "Tender chicken glazed with homemade teriyaki sauce. Simple, delicious, and perfect served over steamed rice.",
-    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
-    cookTime: 20,
-    difficulty: "Easy",
-    servings: 2,
-    category: "Japanese",
-    ingredients: ["4 chicken thighs, boneless", "1/4 cup soy sauce", "2 tbsp mirin", "2 tbsp sake", "1 tbsp sugar", "1 inch ginger, grated", "2 cloves garlic, minced", "2 green onions, chopped"],
-    instructions: ["Marinate chicken in half the soy sauce for 15 minutes", "Mix remaining soy sauce, mirin, sake, and sugar for teriyaki sauce", "Heat a pan and cook chicken skin-side down until golden", "Flip chicken and add ginger and garlic to the pan", "Pour teriyaki sauce over chicken and simmer until glazed", "Garnish with green onions and serve with steamed rice"]
-  },
-  {
-    id: 5,
-    title: "Beef Wellington",
-    description: "Elegant beef tenderloin wrapped in puff pastry with mushroom duxelles. A show-stopping main course for special occasions.",
-    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
-    cookTime: 90,
-    difficulty: "Hard",
-    servings: 8,
-    category: "British",
-    ingredients: ["2 lbs beef tenderloin", "1 sheet puff pastry", "8 oz mushrooms, finely chopped", "6 slices prosciutto", "2 tbsp Dijon mustard", "1 egg, beaten", "2 sprigs fresh thyme", "2 shallots, minced"],
-    instructions: ["Sear beef tenderloin on all sides until browned", "Brush with Dijon mustard and let cool", "Sauté mushrooms and shallots until moisture evaporates", "Lay prosciutto on plastic wrap, spread mushroom mixture", "Wrap beef in prosciutto and chill for 30 minutes", "Wrap in puff pastry, brush with egg wash, and bake at 400°F for 25-30 minutes"]
-  },
-  {
-    id: 6,
-    title: "Mediterranean Quinoa Bowl",
-    description: "Healthy quinoa bowl with fresh vegetables and tahini dressing. Light, nutritious, and packed with Mediterranean flavors.",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop",
-    cookTime: 15,
-    difficulty: "Easy",
-    servings: 2,
-    category: "Mediterranean",
-    ingredients: ["1 cup quinoa", "1 cucumber, diced", "1 cup cherry tomatoes, halved", "1/4 red onion, thinly sliced", "1/2 cup feta cheese, crumbled", "1/4 cup Kalamata olives", "3 tbsp tahini", "2 tbsp lemon juice"],
-    instructions: ["Cook quinoa according to package instructions and let cool", "Prepare all vegetables and arrange in serving bowls", "Whisk tahini with lemon juice and 2-3 tbsp water", "Divide quinoa between bowls and top with vegetables", "Add crumbled feta cheese and olives", "Drizzle with tahini dressing and serve immediately"]
-  }
-];
+
+// let sampleRecipes: Recipe[] = [
+//   {
+//     id: 1,
+//     title: "Creamy Mushroom Risotto",
+//     description: "A rich and creamy Italian risotto with wild mushrooms and fresh herbs. Perfect comfort food for any season.",
+//     image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&h=400&fit=crop",
+//     cookTime: 35 ,
+//     difficulty: "Medium",
+//     servings: 4,
+//     category: "Italian",
+//     ingredients: ["2 cups Arborio rice", "8 oz wild mushrooms, sliced", "6 cups warm vegetable stock", "1/2 cup white wine", "1 cup grated Parmesan cheese", "1 medium onion, diced", "3 cloves garlic, minced", "2 tbsp fresh thyme"],
+//     instructions: ["Heat the vegetable stock in a large saucepan and keep warm", "In a heavy-bottomed pan, sauté diced onions and minced garlic until translucent", "Add Arborio rice and toast for 2-3 minutes until edges are translucent", "Pour in white wine and stir until absorbed", "Add warm stock one ladle at a time, stirring constantly", "Fold in sautéed mushrooms and Parmesan cheese, season to taste"]
+//   },
+//   {
+//     id: 2,
+//     title: "Spicy Thai Green Curry",
+//     description: "Authentic Thai green curry with coconut milk, vegetables, and aromatic herbs. A burst of Southeast Asian flavors.",
+//     image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&h=400&fit=crop",
+//     cookTime: 25 ,
+//     difficulty: "Easy",
+//     servings: 3,
+//     category: "Thai",
+//     ingredients: ["3 tbsp green curry paste", "400ml coconut milk", "500g chicken breast, sliced", "1 cup Thai basil leaves", "2 tbsp fish sauce", "1 tbsp palm sugar", "2 Thai eggplants, quartered", "2 red chilies, sliced"],
+//     instructions: ["Heat 2 tbsp oil in a wok and fry curry paste for 1 minute", "Add thick coconut milk and bring to a gentle simmer", "Add sliced chicken and cook for 5-7 minutes until tender", "Add vegetables and remaining coconut milk", "Season with fish sauce and palm sugar to taste", "Garnish with fresh Thai basil and serve with jasmine rice"]
+//   },
+//   {
+//     id: 3,
+//     title: "Classic French Ratatouille",
+//     description: "Traditional Provençal vegetable stew with Mediterranean flavors. A healthy and colorful dish full of summer vegetables.",
+//     image: "https://images.unsplash.com/photo-1572441713132-51c75654db73?w=600&h=400&fit=crop",
+//     cookTime: 45,
+//     difficulty: "Medium",
+//     servings: 6,
+//     category: "French",
+//     ingredients: ["2 medium eggplants, cubed", "3 zucchini, sliced", "2 bell peppers, chopped", "4 large tomatoes, chopped", "2 onions, sliced", "4 cloves garlic, minced", "2 tsp herbs de Provence", "1/4 cup olive oil"],
+//     instructions: ["Preheat oven to 375°F (190°C)", "Sauté onions and garlic in olive oil until fragrant", "Layer all vegetables in a baking dish", "Drizzle with olive oil and season with herbs", "Cover and bake for 35-40 minutes until vegetables are tender", "Serve hot as a main dish or side"]
+//   },
+//   {
+//     id: 4,
+//     title: "Japanese Chicken Teriyaki",
+//     description: "Tender chicken glazed with homemade teriyaki sauce. Simple, delicious, and perfect served over steamed rice.",
+//     image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
+//     cookTime: 20,
+//     difficulty: "Easy",
+//     servings: 2,
+//     category: "Japanese",
+//     ingredients: ["4 chicken thighs, boneless", "1/4 cup soy sauce", "2 tbsp mirin", "2 tbsp sake", "1 tbsp sugar", "1 inch ginger, grated", "2 cloves garlic, minced", "2 green onions, chopped"],
+//     instructions: ["Marinate chicken in half the soy sauce for 15 minutes", "Mix remaining soy sauce, mirin, sake, and sugar for teriyaki sauce", "Heat a pan and cook chicken skin-side down until golden", "Flip chicken and add ginger and garlic to the pan", "Pour teriyaki sauce over chicken and simmer until glazed", "Garnish with green onions and serve with steamed rice"]
+//   },
+//   {
+//     id: 5,
+//     title: "Beef Wellington",
+//     description: "Elegant beef tenderloin wrapped in puff pastry with mushroom duxelles. A show-stopping main course for special occasions.",
+//     image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
+//     cookTime: 90,
+//     difficulty: "Hard",
+//     servings: 8,
+//     category: "British",
+//     ingredients: ["2 lbs beef tenderloin", "1 sheet puff pastry", "8 oz mushrooms, finely chopped", "6 slices prosciutto", "2 tbsp Dijon mustard", "1 egg, beaten", "2 sprigs fresh thyme", "2 shallots, minced"],
+//     instructions: ["Sear beef tenderloin on all sides until browned", "Brush with Dijon mustard and let cool", "Sauté mushrooms and shallots until moisture evaporates", "Lay prosciutto on plastic wrap, spread mushroom mixture", "Wrap beef in prosciutto and chill for 30 minutes", "Wrap in puff pastry, brush with egg wash, and bake at 400°F for 25-30 minutes"]
+//   },
+//   {
+//     id: 6,
+//     title: "Mediterranean Quinoa Bowl",
+//     description: "Healthy quinoa bowl with fresh vegetables and tahini dressing. Light, nutritious, and packed with Mediterranean flavors.",
+//     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop",
+//     cookTime: 15,
+//     difficulty: "Easy",
+//     servings: 2,
+//     category: "Mediterranean",
+//     ingredients: ["1 cup quinoa", "1 cucumber, diced", "1 cup cherry tomatoes, halved", "1/4 red onion, thinly sliced", "1/2 cup feta cheese, crumbled", "1/4 cup Kalamata olives", "3 tbsp tahini", "2 tbsp lemon juice"],
+//     instructions: ["Cook quinoa according to package instructions and let cool", "Prepare all vegetables and arrange in serving bowls", "Whisk tahini with lemon juice and 2-3 tbsp water", "Divide quinoa between bowls and top with vegetables", "Add crumbled feta cheese and olives", "Drizzle with tahini dressing and serve immediately"]
+//   }
+// ];
 
 const RecipeShowcase: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [sampleRecipes, setSampleRecipes] = useState<Recipe[]>([]);  useEffect(() => {
+  const getRecipesEffect = async () => {
+    try {
+      const response = await getRecipes();
+      console.log(response)
+      if (response && Array.isArray(response)) {
+        setSampleRecipes(response);
+      }
+    } catch (error) {
+      console.log('Error fetching recipes:', error);
+    }
+  };
 
+  getRecipesEffect();
+}, []);
   const categories = ['All', ...Array.from(new Set(sampleRecipes.map(recipe => recipe.category)))];
 
   const filteredRecipes = sampleRecipes.filter(recipe => {
