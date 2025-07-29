@@ -10,18 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { getRecipes } from './services/RecipeServices';
-export interface Recipe {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  cookTime: number;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  servings: number;
-  category: string;
-  ingredients: string[];
-  instructions: string[];
-}
+import { Recipe } from './types/Recipe';
+
 
 
 // let sampleRecipes: Recipe[] = [
@@ -145,7 +135,7 @@ const RecipeShowcase: React.FC = () => {
           {/* Desktop Header */}
           <div className="hidden lg:flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-orange-500 rounded-md flex items-center justify-center">
                 <ChefHat className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -162,7 +152,7 @@ const RecipeShowcase: React.FC = () => {
                   placeholder="Search recipes, ingredients, cuisines..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-gray-50 focus:bg-white hover:border-orange-300"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-gray-50 focus:bg-white hover:border-orange-300"
                 />
               </div>
             </div>
@@ -172,7 +162,7 @@ const RecipeShowcase: React.FC = () => {
           <div className="lg:hidden">
             <div className="flex items-center justify-between h-14">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
                   <ChefHat className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-lg font-bold text-gray-900">RecipeHub</h1>
@@ -188,7 +178,7 @@ const RecipeShowcase: React.FC = () => {
                   placeholder="Search recipes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all text-sm hover:border-orange-300"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all text-sm hover:border-orange-300"
                 />
               </div>
             </div>
@@ -243,7 +233,7 @@ const RecipeShowcase: React.FC = () => {
           {filteredRecipes.map((recipe) => (
             <Card
               key={recipe.id}
-              className="overflow-hidden cursor-pointer group hover:shadow-xltransition-all duration-300 border-gray-200 hover:border-orange-200 bg-white"
+              className="overflow-hidden rounded-md cursor-pointer group hover:shadow-xltransition-all duration-300 border-gray-200 hover:border-orange-200 bg-white"
               onClick={() => setSelectedRecipe(recipe)}
             >
               <div className="relative">
@@ -306,7 +296,7 @@ const RecipeShowcase: React.FC = () => {
       {/* Recipe Detail Modal */}
       {selectedRecipe && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end lg:items-center justify-center">
-          <div className="bg-white rounded-t-2xl lg:rounded-2xl w-full lg:max-w-4xl lg:max-h-[90vh] max-h-[95vh] overflow-y-auto">
+          <div className="bg-white rounded-t-md lg:rounded-md w-full lg:max-w-4xl lg:max-h-[90vh] max-h-[95vh] overflow-y-auto">
             <div className="relative">
               <img
                 src={selectedRecipe.image}
@@ -364,7 +354,7 @@ const RecipeShowcase: React.FC = () => {
                   <ul className="space-y-2">
                     {selectedRecipe.ingredients.map((ingredient, index) => (
                       <li key={index} className="flex items-start gap-3 text-sm lg:text-base">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="w-2 h-2 bg-orange-500 rounded-md mt-2 flex-shrink-0"></div>
                         <span className="text-gray-700">{ingredient}</span>
                       </li>
                     ))}
@@ -376,7 +366,7 @@ const RecipeShowcase: React.FC = () => {
                   <ol className="space-y-4">
                     {selectedRecipe.instructions.map((instruction, index) => (
                       <li key={index} className="flex gap-4">
-                        <span className="bg-orange-500 text-white rounded-full w-6 h-6 lg:w-7 lg:h-7 flex items-center justify-center text-xs lg:text-sm font-semibold flex-shrink-0">
+                        <span className="bg-orange-500 text-white rounded-md w-6 h-6 lg:w-7 lg:h-7 flex items-center justify-center text-xs lg:text-sm font-semibold flex-shrink-0">
                           {index + 1}
                         </span>
                         <span className="text-gray-700 pt-1 text-sm lg:text-base">{instruction}</span>
