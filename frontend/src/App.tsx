@@ -15,7 +15,7 @@ export interface Recipe {
   title: string;
   description: string;
   image: string;
-  cookTime: string;
+  cookTime: number;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   servings: number;
   category: string;
@@ -29,7 +29,7 @@ const sampleRecipes: Recipe[] = [
     title: "Creamy Mushroom Risotto",
     description: "A rich and creamy Italian risotto with wild mushrooms and fresh herbs. Perfect comfort food for any season.",
     image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&h=400&fit=crop",
-    cookTime: "35 mins",
+    cookTime: 35 ,
     difficulty: "Medium",
     servings: 4,
     category: "Italian",
@@ -41,7 +41,7 @@ const sampleRecipes: Recipe[] = [
     title: "Spicy Thai Green Curry",
     description: "Authentic Thai green curry with coconut milk, vegetables, and aromatic herbs. A burst of Southeast Asian flavors.",
     image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&h=400&fit=crop",
-    cookTime: "25 mins",
+    cookTime: 25 ,
     difficulty: "Easy",
     servings: 3,
     category: "Thai",
@@ -53,7 +53,7 @@ const sampleRecipes: Recipe[] = [
     title: "Classic French Ratatouille",
     description: "Traditional Provençal vegetable stew with Mediterranean flavors. A healthy and colorful dish full of summer vegetables.",
     image: "https://images.unsplash.com/photo-1572441713132-51c75654db73?w=600&h=400&fit=crop",
-    cookTime: "45 mins",
+    cookTime: 45,
     difficulty: "Medium",
     servings: 6,
     category: "French",
@@ -65,7 +65,7 @@ const sampleRecipes: Recipe[] = [
     title: "Japanese Chicken Teriyaki",
     description: "Tender chicken glazed with homemade teriyaki sauce. Simple, delicious, and perfect served over steamed rice.",
     image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
-    cookTime: "20 mins",
+    cookTime: 20,
     difficulty: "Easy",
     servings: 2,
     category: "Japanese",
@@ -77,7 +77,7 @@ const sampleRecipes: Recipe[] = [
     title: "Beef Wellington",
     description: "Elegant beef tenderloin wrapped in puff pastry with mushroom duxelles. A show-stopping main course for special occasions.",
     image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
-    cookTime: "90 mins",
+    cookTime: 90,
     difficulty: "Hard",
     servings: 8,
     category: "British",
@@ -89,7 +89,7 @@ const sampleRecipes: Recipe[] = [
     title: "Mediterranean Quinoa Bowl",
     description: "Healthy quinoa bowl with fresh vegetables and tahini dressing. Light, nutritious, and packed with Mediterranean flavors.",
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop",
-    cookTime: "15 mins",
+    cookTime: 15,
     difficulty: "Easy",
     servings: 2,
     category: "Mediterranean",
@@ -264,7 +264,7 @@ const RecipeShowcase: React.FC = () => {
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    <span>{recipe.cookTime}</span>
+                    <span>{recipe.cookTime} mins</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="w-3 h-3" />
@@ -329,7 +329,7 @@ const RecipeShowcase: React.FC = () => {
                 <div className="text-center">
                   <Clock className="w-6 h-6 text-orange-500 mx-auto mb-2" />
                   <div className="text-xs text-gray-500">Cook Time</div>
-                  <div className="font-semibold text-sm">{selectedRecipe.cookTime}</div>
+                  <div className="font-semibold text-sm">{selectedRecipe.cookTime} mis</div>
                 </div>
                 <div className="text-center">
                   <Users className="w-6 h-6 text-orange-500 mx-auto mb-2" />
