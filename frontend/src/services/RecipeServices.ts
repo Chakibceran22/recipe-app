@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Recipe, RecipeFormData } from '../types/Recipe';
+import { AwardIcon } from "lucide-react";
 
 
 export const getRecipesRaw = async ():Promise<Recipe[]| {error: string} > => {
@@ -30,9 +31,9 @@ export const getRecipeById  = async (id: string): Promise<Recipe | {error: strin
     }
 }
 
-export const createRecipe =  async (recipeData: RecipeFormData): Promise<Recipe | {error: string}> => {
+export const createRecipeRaw =  async (recipeData: RecipeFormData): Promise<Recipe | {error: string}> => {
     try {
-        const response = await axios.post<Recipe | {error: string}>('http://localhost:3000/api/recipes', recipeData);
+        const response = await axios.post<Recipe | {error: string}>('http://localhost:3000/api/create-recipe', recipeData);
         if(response){
             return response.data;
         }
@@ -41,5 +42,17 @@ export const createRecipe =  async (recipeData: RecipeFormData): Promise<Recipe 
         }
     } catch (error) {
         return { error: "An error occurred while creating the recipe." };
+    }
+}
+
+export const createRecipe = async (recipeData: RecipeFormData): Promise<Recipe> => {
+    try {
+        const recipe = await createRecipeRaw(recipeData);
+        if ('error' in recipe) {
+            throw new Error(recipe.error);
+        }
+        return recipe; // This will be Recipe
+    } catch (error) {
+        throw new Error("An error accured in fetching the data")
     }
 }
