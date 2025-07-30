@@ -2,13 +2,23 @@ import axios from "axios";
 import { Recipe, RecipeFormData } from '../types/Recipe';
 
 
-export const getRecipes = async ():Promise<Recipe[] | {error: string}> => {
+export const getRecipesRaw = async ():Promise<Recipe[]| {error: string} > => {
     try {
         const response = await axios.get<Recipe[] | {error: string}>('http://localhost:3000/api/recipes');
         return response.data;
     } catch (error) {
-        return { error:   "an error has accured" };
+        throw new Error("An error occurred while fetching recipes.");
     }
+}
+export const getRecipes = async (): Promise<Recipe[]> => {
+    const result = await getRecipesRaw();
+    
+    // Check if result has error property
+    if ('error' in result) {
+        throw new Error(result.error);
+    }
+    
+    return result; // This will be Recipe[]
 }
 
 export const getRecipeById  = async (id: string): Promise<Recipe | {error: string}> => {

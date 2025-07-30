@@ -1,384 +1,130 @@
-import React, { useEffect, useState } from 'react';
-import { Clock, Users, ChefHat, Search, X, ChevronDown } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { getRecipes } from './services/RecipeServices';
-import { Recipe } from './types/Recipe';
-
-
-
-// let sampleRecipes: Recipe[] = [
-//   {
-//     id: 1,
-//     title: "Creamy Mushroom Risotto",
-//     description: "A rich and creamy Italian risotto with wild mushrooms and fresh herbs. Perfect comfort food for any season.",
-//     image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&h=400&fit=crop",
-//     cookTime: 35 ,
-//     difficulty: "Medium",
-//     servings: 4,
-//     category: "Italian",
-//     ingredients: ["2 cups Arborio rice", "8 oz wild mushrooms, sliced", "6 cups warm vegetable stock", "1/2 cup white wine", "1 cup grated Parmesan cheese", "1 medium onion, diced", "3 cloves garlic, minced", "2 tbsp fresh thyme"],
-//     instructions: ["Heat the vegetable stock in a large saucepan and keep warm", "In a heavy-bottomed pan, sauté diced onions and minced garlic until translucent", "Add Arborio rice and toast for 2-3 minutes until edges are translucent", "Pour in white wine and stir until absorbed", "Add warm stock one ladle at a time, stirring constantly", "Fold in sautéed mushrooms and Parmesan cheese, season to taste"]
-//   },
-//   {
-//     id: 2,
-//     title: "Spicy Thai Green Curry",
-//     description: "Authentic Thai green curry with coconut milk, vegetables, and aromatic herbs. A burst of Southeast Asian flavors.",
-//     image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&h=400&fit=crop",
-//     cookTime: 25 ,
-//     difficulty: "Easy",
-//     servings: 3,
-//     category: "Thai",
-//     ingredients: ["3 tbsp green curry paste", "400ml coconut milk", "500g chicken breast, sliced", "1 cup Thai basil leaves", "2 tbsp fish sauce", "1 tbsp palm sugar", "2 Thai eggplants, quartered", "2 red chilies, sliced"],
-//     instructions: ["Heat 2 tbsp oil in a wok and fry curry paste for 1 minute", "Add thick coconut milk and bring to a gentle simmer", "Add sliced chicken and cook for 5-7 minutes until tender", "Add vegetables and remaining coconut milk", "Season with fish sauce and palm sugar to taste", "Garnish with fresh Thai basil and serve with jasmine rice"]
-//   },
-//   {
-//     id: 3,
-//     title: "Classic French Ratatouille",
-//     description: "Traditional Provençal vegetable stew with Mediterranean flavors. A healthy and colorful dish full of summer vegetables.",
-//     image: "https://images.unsplash.com/photo-1572441713132-51c75654db73?w=600&h=400&fit=crop",
-//     cookTime: 45,
-//     difficulty: "Medium",
-//     servings: 6,
-//     category: "French",
-//     ingredients: ["2 medium eggplants, cubed", "3 zucchini, sliced", "2 bell peppers, chopped", "4 large tomatoes, chopped", "2 onions, sliced", "4 cloves garlic, minced", "2 tsp herbs de Provence", "1/4 cup olive oil"],
-//     instructions: ["Preheat oven to 375°F (190°C)", "Sauté onions and garlic in olive oil until fragrant", "Layer all vegetables in a baking dish", "Drizzle with olive oil and season with herbs", "Cover and bake for 35-40 minutes until vegetables are tender", "Serve hot as a main dish or side"]
-//   },
-//   {
-//     id: 4,
-//     title: "Japanese Chicken Teriyaki",
-//     description: "Tender chicken glazed with homemade teriyaki sauce. Simple, delicious, and perfect served over steamed rice.",
-//     image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
-//     cookTime: 20,
-//     difficulty: "Easy",
-//     servings: 2,
-//     category: "Japanese",
-//     ingredients: ["4 chicken thighs, boneless", "1/4 cup soy sauce", "2 tbsp mirin", "2 tbsp sake", "1 tbsp sugar", "1 inch ginger, grated", "2 cloves garlic, minced", "2 green onions, chopped"],
-//     instructions: ["Marinate chicken in half the soy sauce for 15 minutes", "Mix remaining soy sauce, mirin, sake, and sugar for teriyaki sauce", "Heat a pan and cook chicken skin-side down until golden", "Flip chicken and add ginger and garlic to the pan", "Pour teriyaki sauce over chicken and simmer until glazed", "Garnish with green onions and serve with steamed rice"]
-//   },
-//   {
-//     id: 5,
-//     title: "Beef Wellington",
-//     description: "Elegant beef tenderloin wrapped in puff pastry with mushroom duxelles. A show-stopping main course for special occasions.",
-//     image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&h=400&fit=crop",
-//     cookTime: 90,
-//     difficulty: "Hard",
-//     servings: 8,
-//     category: "British",
-//     ingredients: ["2 lbs beef tenderloin", "1 sheet puff pastry", "8 oz mushrooms, finely chopped", "6 slices prosciutto", "2 tbsp Dijon mustard", "1 egg, beaten", "2 sprigs fresh thyme", "2 shallots, minced"],
-//     instructions: ["Sear beef tenderloin on all sides until browned", "Brush with Dijon mustard and let cool", "Sauté mushrooms and shallots until moisture evaporates", "Lay prosciutto on plastic wrap, spread mushroom mixture", "Wrap beef in prosciutto and chill for 30 minutes", "Wrap in puff pastry, brush with egg wash, and bake at 400°F for 25-30 minutes"]
-//   },
-//   {
-//     id: 6,
-//     title: "Mediterranean Quinoa Bowl",
-//     description: "Healthy quinoa bowl with fresh vegetables and tahini dressing. Light, nutritious, and packed with Mediterranean flavors.",
-//     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop",
-//     cookTime: 15,
-//     difficulty: "Easy",
-//     servings: 2,
-//     category: "Mediterranean",
-//     ingredients: ["1 cup quinoa", "1 cucumber, diced", "1 cup cherry tomatoes, halved", "1/4 red onion, thinly sliced", "1/2 cup feta cheese, crumbled", "1/4 cup Kalamata olives", "3 tbsp tahini", "2 tbsp lemon juice"],
-//     instructions: ["Cook quinoa according to package instructions and let cool", "Prepare all vegetables and arrange in serving bowls", "Whisk tahini with lemon juice and 2-3 tbsp water", "Divide quinoa between bowls and top with vegetables", "Add crumbled feta cheese and olives", "Drizzle with tahini dressing and serve immediately"]
-//   }
-// ];
+import React, { useEffect, useState } from "react";
+import { Search } from "lucide-react";
+import { getRecipes } from "./services/RecipeServices"; // Adjust the import path as necessary
+import { Recipe } from "./types/Recipe";
+import { RecipeCardSkeleton } from "./components/RecipeCardSkeleton";
+import { LoadingSpinner } from "./components/LoadingSpinner";
+import RecipeError from "./components/ErrorSction";
+import { Header } from "./components/Header";
+import CategoryFilter from "./components/CategoryFilter";
+import SelectedRecipe from "./components/SelectedRecipe";
+import MainConten from "./components/MainConten";
+import { useQuery } from "@tanstack/react-query";
+import toast, { Toaster } from "react-hot-toast";
 
 const RecipeShowcase: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [sampleRecipes, setSampleRecipes] = useState<Recipe[]>([]);  useEffect(() => {
-  const getRecipesEffect = async () => {
-    try {
-      const response = await getRecipes();
-      console.log(response)
-      if (response && Array.isArray(response)) {
-        setSampleRecipes(response);
-      }
-    } catch (error) {
-      console.log('Error fetching recipes:', error);
+  const {
+    data: sampleRecipes = [],
+    isLoading,
+    error,
+    
+  } = useQuery<Recipe[]>({
+    queryKey: ["recipes"],
+    queryFn: getRecipes,
+    staleTime: 1000 * 60 * 10,
+  });
+  useEffect(() => {
+    if (error) {
+      toast.error(
+        "An error occurred while fetching recipes. Please try again later."
+      );
     }
-  };
+  }, [error]);
 
-  getRecipesEffect();
-}, []);
-  const categories = ['All', ...Array.from(new Set(sampleRecipes.map(recipe => recipe.category)))];
+  
 
-  const filteredRecipes = sampleRecipes.filter(recipe => {
-    const matchesCategory = selectedCategory === 'All' || recipe.category === selectedCategory;
-    const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         recipe.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         recipe.ingredients.some(ingredient => ingredient.toLowerCase().includes(searchTerm.toLowerCase()));
+  const categories = [
+    "All",
+    ...Array.from(new Set(sampleRecipes.map((recipe) => recipe.category))),
+  ];
+
+  const filteredRecipes = sampleRecipes.filter((recipe) => {
+    const matchesCategory =
+      selectedCategory === "All" || recipe.category === selectedCategory;
+    const matchesSearch =
+      recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recipe.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recipe.ingredients.some((ingredient) =>
+        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     return matchesCategory && matchesSearch;
   });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy': return 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100';
-      case 'Medium': return 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100';
-      case 'Hard': return 'text-red-700 bg-red-50 border-red-200 hover:bg-red-100';
-      default: return 'text-gray-700 bg-gray-50 border-gray-200 hover:bg-gray-100';
+      case "Easy":
+        return "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100";
+      case "Medium":
+        return "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100";
+      case "Hard":
+        return "text-red-700 bg-red-50 border-red-200 hover:bg-red-100";
+      default:
+        return "text-gray-700 bg-gray-50 border-gray-200 hover:bg-gray-100";
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Desktop Header */}
-          <div className="hidden lg:flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-orange-500 rounded-md flex items-center justify-center">
-                <ChefHat className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">RecipeHub</h1>
-                <p className="text-xs text-gray-500">Discover & Share</p>
-              </div>
-            </div>
-            
-            <div className="flex-1 max-w-2xl mx-8">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search recipes, ingredients, cuisines..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-gray-50 focus:bg-white hover:border-orange-300"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Header */}
-          <div className="lg:hidden">
-            <div className="flex items-center justify-between h-14">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
-                  <ChefHat className="w-5 h-5 text-white" />
-                </div>
-                <h1 className="text-lg font-bold text-gray-900">RecipeHub</h1>
-              </div>
-            </div>
-            
-            {/* Mobile Search */}
-            <div className="pb-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search recipes..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all text-sm hover:border-orange-300"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        isLoading={isLoading}
+      />
 
       {/* Category Filter */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700">Filter by cuisine:</span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-48 justify-between bg-white border-orange-200 hover:bg-orange-50 hover:border-orange-300 text-gray-900"
-                  >
-                    <span>{selectedCategory}</span>
-                    <ChevronDown className="h-4 w-4 text-orange-500" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48">
-                  {categories.map(category => (
-                    <DropdownMenuItem
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`cursor-pointer hover:bg-orange-50 ${
-                        selectedCategory === category 
-                          ? 'bg-orange-100 text-orange-700 font-medium' 
-                          : 'text-gray-700 hover:text-orange-700'
-                      }`}
-                    >
-                      {category}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            
-            <div className="hidden sm:flex items-center text-sm text-gray-500">
-              <span><span className="font-semibold text-orange-600">{filteredRecipes.length}</span> recipes found</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CategoryFilter
+        isLoading={isLoading}
+        setSelectedCategory={setSelectedCategory}
+        selectedCategory={selectedCategory}
+        categories={categories}
+        filteredRecipes={filteredRecipes}
+      />
 
       {/* Recipe Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-          {filteredRecipes.map((recipe) => (
-            <Card
-              key={recipe.id}
-              className="overflow-hidden rounded-md cursor-pointer group hover:shadow-xltransition-all duration-300 border-gray-200 hover:border-orange-200 bg-white"
-              onClick={() => setSelectedRecipe(recipe)}
-            >
-              <div className="relative">
-                <img
-                  src={recipe.image}
-                  alt={recipe.title}
-                  className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-3 left-3">
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-xs font-medium border ${getDifficultyColor(recipe.difficulty)}`}
-                  >
-                    {recipe.difficulty}
-                  </Badge>
-                </div>
-                <div className="absolute bottom-3 left-3">
-                  <Badge className="bg-orange-500/90 backdrop-blur-sm text-white hover:bg-orange-600 text-xs border-0">
-                    {recipe.category}
-                  </Badge>
-                </div>
-              </div>
-              
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm lg:text-base group-hover:text-orange-600 transition-colors">
-                  {recipe.title}
-                </h3>
-                
-                <p className="text-gray-600 text-xs lg:text-sm mb-4 line-clamp-2">
-                  {recipe.description}
-                </p>
-                
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{recipe.cookTime} mins</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    <span>{recipe.servings}</span>
-                  </div>
-                  <div className="text-orange-500 font-medium group-hover:text-orange-600 transition-colors">
-                    View Recipe →
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isLoading ? (
+          <>
+            <LoadingSpinner />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <RecipeCardSkeleton key={index} />
+              ))}
+            </div>
+          </>
+        ) : error ? (
+          <RecipeError />
+        ) : (
+          <MainConten
+            filteredRecipes={filteredRecipes}
+            setSelectedRecipe={setSelectedRecipe}
+            getDifficultyColor={getDifficultyColor}
+          />
+        )}
+        <Toaster position="bottom-right" />
 
-        {filteredRecipes.length === 0 && (
+        {!isLoading && !error && filteredRecipes.length === 0 && (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-2">No recipes found</h3>
-            <p className="text-gray-500 text-sm">Try searching for something else or browse our categories</p>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">
+              No recipes found
+            </h3>
+            <p className="text-gray-500 text-sm">
+              Try searching for something else or browse our categories
+            </p>
           </div>
         )}
       </main>
 
       {/* Recipe Detail Modal */}
-      {selectedRecipe && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end lg:items-center justify-center">
-          <div className="bg-white rounded-t-md lg:rounded-md w-full lg:max-w-4xl lg:max-h-[90vh] max-h-[95vh] overflow-y-auto">
-            <div className="relative">
-              <img
-                src={selectedRecipe.image}
-                alt={selectedRecipe.title}
-                className="w-full h-48 lg:h-64 object-cover"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedRecipe(null)}
-                className="absolute top-4 right-4 h-10 w-10 p-0 bg-white/90 backdrop-blur-sm hover:bg-white hover:text-orange-500 transition-all"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-orange-500 text-white hover:bg-orange-600 text-xs border-0">
-                    {selectedRecipe.category}
-                  </Badge>
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-xs font-medium border ${getDifficultyColor(selectedRecipe.difficulty)}`}
-                  >
-                    {selectedRecipe.difficulty}
-                  </Badge>
-                </div>
-                <h2 className="text-xl lg:text-2xl font-bold text-white">{selectedRecipe.title}</h2>
-              </div>
-            </div>
-            
-            <div className="p-4 lg:p-6">
-              <p className="text-gray-600 mb-6 text-sm lg:text-base">{selectedRecipe.description}</p>
-              
-              <div className="grid grid-cols-3 gap-4 mb-8 pb-6 border-b border-gray-200">
-                <div className="text-center">
-                  <Clock className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-                  <div className="text-xs text-gray-500">Cook Time</div>
-                  <div className="font-semibold text-sm">{selectedRecipe.cookTime} mis</div>
-                </div>
-                <div className="text-center">
-                  <Users className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-                  <div className="text-xs text-gray-500">Servings</div>
-                  <div className="font-semibold text-sm">{selectedRecipe.servings}</div>
-                </div>
-                <div className="text-center">
-                  <ChefHat className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-                  <div className="text-xs text-gray-500">Difficulty</div>
-                  <div className="font-semibold text-sm">{selectedRecipe.difficulty}</div>
-                </div>
-              </div>
-              
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold mb-4 text-gray-900">Ingredients</h3>
-                  <ul className="space-y-2">
-                    {selectedRecipe.ingredients.map((ingredient, index) => (
-                      <li key={index} className="flex items-start gap-3 text-sm lg:text-base">
-                        <div className="w-2 h-2 bg-orange-500 rounded-md mt-2 flex-shrink-0"></div>
-                        <span className="text-gray-700">{ingredient}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold mb-4 text-gray-900">Instructions</h3>
-                  <ol className="space-y-4">
-                    {selectedRecipe.instructions.map((instruction, index) => (
-                      <li key={index} className="flex gap-4">
-                        <span className="bg-orange-500 text-white rounded-md w-6 h-6 lg:w-7 lg:h-7 flex items-center justify-center text-xs lg:text-sm font-semibold flex-shrink-0">
-                          {index + 1}
-                        </span>
-                        <span className="text-gray-700 pt-1 text-sm lg:text-base">{instruction}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <SelectedRecipe
+        selectedRecipe={selectedRecipe}
+        setSelectedRecipe={setSelectedRecipe}
+        getDifficultyColor={getDifficultyColor}
+      />
     </div>
   );
 };
