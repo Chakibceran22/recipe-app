@@ -18,6 +18,7 @@ export class RecipesController {
 
    @Post()
    async createRecipe(@Body() createRecipeDto : CreateRecipeDto): Promise<CreateRecipeDto> {
+     console.log(createRecipeDto instanceof CreateRecipeDto);
         return this.reciperService.createRecipe(createRecipeDto);
    }
 
