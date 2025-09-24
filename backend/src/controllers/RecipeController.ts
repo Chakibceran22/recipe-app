@@ -8,7 +8,7 @@ export class RecipeController {
   async getRecipes(req: Request, res: Response<Recipe[] | { error: string }>) {
     try {
       const recipes = await this.recipeService.getRecipes();
-      res.status(200).json(recipes);
+      res.status(200).json(recipes)
     } catch (error) {
       res
         .status(500)
