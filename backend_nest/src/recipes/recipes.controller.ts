@@ -12,12 +12,13 @@ import { RecipesService } from './recipes.service';
 import { Recipe } from './entities/recipe.entity';
 import { CreateRecipeDto } from './dto/create-recipe/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto/update-recipe.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 @Controller('recipes')
 export class RecipesController {
   constructor(private readonly reciperService: RecipesService) {}
   @Get()
-  async getRecipes(): Promise<Recipe[]> {
-    return this.reciperService.getAllRecipes();
+  async getRecipes(@Query() paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
+    return this.reciperService.getAllRecipes(paginationQuery);
   }
   @Get(':id')
   async getRecipeById(@Param('id') id: string): Promise<Recipe> {

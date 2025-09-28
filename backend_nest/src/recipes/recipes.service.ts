@@ -5,6 +5,7 @@ import { UpdateRecipeDto } from './dto/update-recipe.dto/update-recipe.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Difficulty } from './entities/difficulty.entity';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 @Injectable()
 export class RecipesService {
   constructor(
@@ -25,10 +26,28 @@ export class RecipesService {
     return result;
   }
 
-  async getAllRecipes(): Promise<Recipe[]> {
-    const results = await this.recipeRepository.find();
+  async getAllRecipes(paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
+    const { limit = 10, offset = 0 } = paginationQuery;
+    
+    // Debug logging
+    console.log('=== PAGINATION DEBUG ===');
+    console.log('Offset:', offset, typeof offset);
+    console.log('Limit:', limit, typeof limit);
+    
+    const results = await this.recipeRepository.find({
+      skip: offset,
+      take: limit,
+      order: {
+        id: 'DESC'  // CRITICAL: Add consistent ordering
+      }
+    });
+    
+    console.log('Total results returned:', results.length);
+    console.log('First result ID:', results[0]?.id);
+    console.log('========================');
+    
     return results;
-  }
+}
 
   async createRecipe(data: CreateRecipeDto): Promise<Recipe> {
     const difficulty = await this.preloadDifficultyByLevel(data.difficulty);
