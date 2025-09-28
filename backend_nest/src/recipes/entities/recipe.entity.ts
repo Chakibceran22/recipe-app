@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Difficulty } from "./difficulty.entity";
 
 @Entity('recipes')
 export class Recipe {
@@ -16,8 +17,12 @@ export class Recipe {
     @Column()
     cookTime:number
 
-    @Column()
-    difficulty:string
+    @JoinTable()
+    @ManyToOne(() => Difficulty, (difficulty) => difficulty.recipes, {
+        cascade: true,
+        eager: true
+    })
+    difficulty:Difficulty
 
     @Column()
     servings :number

@@ -9,6 +9,11 @@ async function bootstrap() {
     forbidNonWhitelisted : true,//this will throw an error if it recived an unwanted attribute
     transform : true,//this will istanciate the javascript object that we get through the requests into its current dto 
   }))
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  })
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

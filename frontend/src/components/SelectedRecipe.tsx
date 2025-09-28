@@ -33,9 +33,9 @@ const SelectedRecipe = ({selectedRecipe, setSelectedRecipe,getDifficultyColor}:{
                   </Badge>
                   <Badge 
                     variant="secondary" 
-                    className={`text-xs font-medium border ${getDifficultyColor(selectedRecipe.difficulty)}`}
+                    className={`text-xs font-medium border ${getDifficultyColor(selectedRecipe.difficulty.level)}`}
                   >
-                    {selectedRecipe.difficulty}
+                    {selectedRecipe.difficulty.level}
                   </Badge>
                 </div>
                 <h2 className="text-xl lg:text-2xl font-bold text-white">{selectedRecipe.title}</h2>
@@ -59,7 +59,7 @@ const SelectedRecipe = ({selectedRecipe, setSelectedRecipe,getDifficultyColor}:{
                 <div className="text-center">
                   <ChefHat className="w-6 h-6 text-orange-500 mx-auto mb-2" />
                   <div className="text-xs text-gray-500">Difficulty</div>
-                  <div className="font-semibold text-sm">{selectedRecipe.difficulty}</div>
+                  <div className="font-semibold text-sm">{selectedRecipe.difficulty.level}</div>
                 </div>
               </div>
               

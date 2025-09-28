@@ -6,7 +6,7 @@ import { RecipesModule } from './recipes/recipes.module';
   imports: [RecipesModule,TypeOrmModule.forRoot({
     type: 'postgres',
     host: 'localhost',
-    port: 5433,
+    port: 3001,
     username: 'postgres',
     password: '1111',
     database: 'recipes_db',

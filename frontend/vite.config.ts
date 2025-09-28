@@ -7,5 +7,9 @@ export default defineConfig({
      alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  server: {
+    port: 3000, // Use port 3000 instead
+    host: '127.0.0.1' // Force IPv4
   }
 })

@@ -1,11 +1,10 @@
 import axios from "axios";
 import { Recipe, RecipeFormData } from '../types/Recipe';
-import { AwardIcon } from "lucide-react";
 
 
 export const getRecipesRaw = async ():Promise<Recipe[]| {error: string} > => {
     try {
-        const response = await axios.get<Recipe[] | {error: string}>('http://localhost:3000/api/recipes');
+        const response = await axios.get<Recipe[] | {error: string}>('http://localhost:3000/recipes');
         return response.data;
     } catch (error) {
         throw new Error("An error occurred while fetching recipes.");
@@ -33,7 +32,7 @@ export const getRecipeById  = async (id: string): Promise<Recipe | {error: strin
 
 export const createRecipeRaw =  async (recipeData: RecipeFormData): Promise<Recipe | {error: string}> => {
     try {
-        const response = await axios.post<Recipe | {error: string}>('http://localhost:3000/api/create-recipe', recipeData);
+        const response = await axios.post<Recipe | {error: string}>('http://localhost:3000/recipes', recipeData);
         if(response){
             return response.data;
         }

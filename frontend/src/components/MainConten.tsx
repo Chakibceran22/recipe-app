@@ -2,7 +2,7 @@
 import { Card, CardContent } from "./ui/card"
 import { Badge } from "./ui/badge"
 import { Clock, Users } from "lucide-react"
-import { Recipe } from "@/types/Recipe"
+import { Difficulty, Recipe } from "@/types/Recipe"
 const MainConten = ({filteredRecipes, setSelectedRecipe, getDifficultyColor}:{
     filteredRecipes: Recipe[],
     setSelectedRecipe: (recipe: Recipe) => void,
@@ -25,9 +25,9 @@ const MainConten = ({filteredRecipes, setSelectedRecipe, getDifficultyColor}:{
                   <div className="absolute top-3 left-3">
                     <Badge 
                       variant="secondary" 
-                      className={`text-xs font-medium border ${getDifficultyColor(recipe.difficulty)}`}
+                      className={`text-xs font-medium border ${getDifficultyColor(recipe.difficulty.level.toLowerCase())}`}
                     >
-                      {recipe.difficulty}
+                      {recipe.difficulty.level}
                     </Badge>
                   </div>
                   <div className="absolute bottom-3 left-3">

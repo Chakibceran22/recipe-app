@@ -13,7 +13,9 @@ const CreateRecipePage = ({ queryClient} : {queryClient: QueryClient}) => {
     description: '',
     image: '',
     cookTime: 30,
-    difficulty: 'Easy',
+    difficulty: {
+      level: 'Easy'
+    },
     servings: 4,
     category: '',
     ingredients: [''],

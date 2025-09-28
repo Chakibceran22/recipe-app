@@ -4,11 +4,19 @@ export type Recipe  = {
   description: string;
   image: string;
   cookTime: number;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
+  difficulty: Difficulty;
   servings: number;
   category: string;
   ingredients: string[];
   instructions: string[];
 }
 
-export type RecipeFormData = Omit<Recipe, 'id'>;
+export type Difficulty = {
+  id : string;
+  level : string;
+}
+export type DifficultyDto = {
+  level : string;
+}
+
+export type RecipeFormData = Omit<Recipe, 'id'|'difficulty'> & { difficulty: DifficultyDto };
