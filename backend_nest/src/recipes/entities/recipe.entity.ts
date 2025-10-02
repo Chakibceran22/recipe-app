@@ -10,6 +10,9 @@ export class Recipe {
 
     @Column()
     description:string
+    
+    @Column({default : 0})
+    recomendations: number
 
     @Column()
     image:string

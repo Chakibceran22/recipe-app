@@ -3,9 +3,11 @@ import { Recipe } from './entities/recipe.entity';
 import { CreateRecipeDto } from './dto/create-recipe/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto/update-recipe.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Connection, DataSource, Repository } from 'typeorm';
 import { Difficulty } from './entities/difficulty.entity';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { Event } from 'src/events/entities/event.entity/event.entity';
+import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
 @Injectable()
 export class RecipesService {
   constructor(
@@ -14,6 +16,7 @@ export class RecipesService {
     @InjectRepository(Difficulty)
     private readonly difficultyRepository: Repository<Difficulty>,
     private readonly dataSource: DataSource,
+    
   ) {}
   async getRecipeById(id: string): Promise<Recipe> {
     const result = await this.recipeRepository.findOne({
@@ -27,27 +30,17 @@ export class RecipesService {
   }
 
   async getAllRecipes(paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
-    const { limit = 10, offset = 0 } = paginationQuery;
-    
-    // Debug logging
-    console.log('=== PAGINATION DEBUG ===');
-    console.log('Offset:', offset, typeof offset);
-    console.log('Limit:', limit, typeof limit);
-    
+    const { limit, offset } = paginationQuery;
+
     const results = await this.recipeRepository.find({
       skip: offset,
       take: limit,
-      order: {
-        id: 'DESC'  // CRITICAL: Add consistent ordering
+      order : {
+        id : "ASC"//i used this becuse the guy used id inc and for me i dont have them sorted when they come put so basically that wouldnt work when you try to paginate it works only on sorted data 
       }
     });
-    
-    console.log('Total results returned:', results.length);
-    console.log('First result ID:', results[0]?.id);
-    console.log('========================');
-    
     return results;
-}
+  }
 
   async createRecipe(data: CreateRecipeDto): Promise<Recipe> {
     const difficulty = await this.preloadDifficultyByLevel(data.difficulty);
@@ -145,8 +138,40 @@ export class RecipesService {
       return createdRecipes;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      console.log(error);
       throw new HttpException('Error inserting bulk recipes', 500);
     } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async recomendRecipe(recipeId: RecomendRecipeDto): Promise<void> {
+    const recipe = await this.getRecipeById(recipeId.id);
+     //this is basics of transactions with query runners with new versions they changes the connection object to Datasource 
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      recipe.recomendations++;
+      
+      const recomendEvent = new Event();
+      recomendEvent.name = 'recommend_recipe';
+      recomendEvent.type = 'recipe';
+      recomendEvent.payload = { recipeId: recipe.id };
+
+      await queryRunner.manager.save(recipe);
+      await queryRunner.manager.save(recomendEvent);
+      await queryRunner.commitTransaction();
+
+      
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.log(error.message);
+      throw new HttpException('Error recommending recipe', 500);
+
+    }
+    finally{
       await queryRunner.release();
     }
   }
@@ -158,6 +183,6 @@ export class RecipesService {
     if (existingFlavor) {
       return existingFlavor;
     }
-    return this.difficultyRepository.create({ level });
+    return this.difficultyRepository.save({ level });
   }
 }

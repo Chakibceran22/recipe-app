@@ -2,6 +2,7 @@ export type Recipe  = {
   id: number;
   title: string;
   description: string;
+  recomendations: number;
   image: string;
   cookTime: number;
   difficulty: Difficulty;
