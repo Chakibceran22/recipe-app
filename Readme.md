@@ -10,7 +10,7 @@ It prevents Data Loss by changing the schema and keeping the data in a safe way 
 
 ## Creating a Migration
 ``` bash
-//we crate a migration with this command and give it a name 
+#we crate a migration with this command and give it a name 
 
 npx typeorm migration:create src/migrations/MigrationName
 ```
