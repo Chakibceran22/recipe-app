@@ -67,3 +67,14 @@ Then you eun this command to commit the migration
 ```bash
 npx typeorm migration:run -d <Data Source file path>
 ```
+
+## Migration generation
+
+you can generate migrations by changing the entities in the nest entities folder and then typeorm will compare the entities with db schemas and will generate the right migrations with this command 
+
+```bash
+#first you need to build the new changes with
+npm run build
+# after that you can run the migrtation generat
+npx typeorm migration:generate -n MigrationName
+```
