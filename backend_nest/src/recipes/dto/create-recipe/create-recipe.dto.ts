@@ -2,7 +2,7 @@ import { IsString, IsNumber } from "class-validator";
 
 export class CreateRecipeDto {
   @IsString()
-  readonly title: string;
+  readonly name: string;
   
   @IsString()
   readonly description: string;

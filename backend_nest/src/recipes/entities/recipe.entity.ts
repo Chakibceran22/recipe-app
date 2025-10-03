@@ -6,7 +6,7 @@ export class Recipe {
     @PrimaryGeneratedColumn('uuid')
     id: string;
     @Column()
-    title: string
+    name: string
 
     @Column()
     description:string
