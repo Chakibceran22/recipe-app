@@ -2,7 +2,8 @@
 In this document i will be recording my journey in nest and how idelved deep into its core and design patrerns concepts
 <br>
 <br>
-Ps: i will be using postgres as my db and typeorm as my orm so results may differ if you use mysql or prisma for the orm 
+Ps: i will be using postgres as my db and typeorm as my orm so results may differ if you use mysql or prisma for the orm.
+I Acknowledg that the examples provided in this document arent the best practices for example the difficulty as a table( we would usually use an enum and many more) but its for learning purpouses
 
 # 1.Nest Basics
 Te basic building blocks in nest are these three basic blocks:
@@ -242,10 +243,340 @@ app.useGlobalPipes( new ValidationPipe({
   }))
 ```
 
-and then we can use decorators in our DTOs to verfiy incoming input
+and then we can use decorators in our DTOs to verfiy incoming input.And the nest runtime handles all the error thows.
+
+# 3.Manipulating Realted Data
+
+To Manipulate Related Data in our case we need to create a certain recipe and its difficulty object from the Difficulties table we need to preload them to see if it does exist or ot if it does we load it and send it with the recipe and if not we create it with this methode 
+```typescript
+private async preloadDifficultyByLevel(level: string): Promise<Difficulty> {
+    const existingFlavor = await this.difficultyRepository.findOne({
+      where: { level },
+    });
+    if (existingFlavor) {
+      return existingFlavor;
+    }
+    return this.difficultyRepository.save({ level });
+  }
+  ```
+  Then we call it in the create method as follows 
+```typescript
+async createRecipe(data: CreateRecipeDto): Promise<Recipe> {
+    const difficulty = await this.preloadDifficultyByLevel(data.difficulty);//we preload the diff here before creating the recipe to insure a unique diff exists so one 
+    const recipe = this.recipeRepository.create({
+      ...data,
+      difficulty,
+    }); // this is interesting  you create first the Recipe Entity object with all the new fields and then you save it
+    const result = await this.recipeRepository.save(recipe);
+    if (!result) {
+      throw new HttpException('Error creating recipe', 500);
+    }
+    return result;
+  }
+```  
+# 4.Simple Crud Operations:
+
+create has been dealt with in the prev chapter
+
+## Reads
+To Read from the db you simply use the repository object provided by typeorm as follows 
+```typescript
+async getAllRecipes(paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
+    const { limit, offset } = paginationQuery;
+
+    const results = await this.recipeRepository.find({
+      skip: offset,
+      take: limit,
+      order : {
+        id : "ASC"//i used this becuse the guy used id inc and for me i dont have them sorted when they come put so basically that wouldnt work when you try to paginate it works only on sorted data 
+      }
+    });
+    return results;
+  }
+  ```
+small note
+you can see that we ae using a pagination query we will talk about this in the **pagination section** 
+
+## Update 
+
+we Update data with two methods 
+### Update function method
+
+we use the update function to update the data directly and let typeorm handle that but the issue with this approach is that the cascading options for having multiple relations wont be handled prperly meaning that if we updated the recipe with the new difficulty it will only update the refrence key and not the actual object lets say we have a new difficulty in th recipe that doesnt exist that will cause an issue because it cant cascade the creation its a simple update 
+
+```typescript
+// Scenario 1: Update with EXISTING difficulty ID
+await recipeRepository.update(recipeId, {
+  difficulty: { id: 3 } // exists in DB
+});
+// ✅ Works - just updates the foreign key
+
+// Scenario 2: Update with NEW difficulty object
+await recipeRepository.update(recipeId, {
+  difficulty: { name: 'Super Hard', level: 5 } // doesn't exist yet!
+});
+// ❌ FAILS - update() can't cascade create the new difficulty
+// It's just a simple UPDATE statement, not entity-aware
+```
+
+### Preload Save Method
+
+this is generally the safest option when you are dealing with related data, its seperated into two simple steps 
+
+**1.** we preload the related data in this case the difficulty but
+```typescript
+ const difficulty = data.difficulty && (await this.preloadDifficultyByLevel(data.difficulty)); // we do this prealod to verify of the diff exists beforehand if not we create new one
+```
+
+**2.** we preload the data (we do a SELECT query) and load the data in memeory.
+
+```typescript
+const recipe = await this.recipeRepository.preload({
+      id: id,
+      ...data,
+      difficulty: difficulty || undefined,
+    }); //we preload to not have issues with exitance you see this is the safer way
+```
+
+**3.** then we save the cahnges with save function 
+```typescript
+    const result = await this.recipeRepository.save(recipe);
+```
+notice that this is oversimplifies you need to handle the errors too here is the fll demonstration of the service function
+```typescript
+async updateRecipe(id: string, data: UpdateRecipeDto): Promise<string> {
+    const difficulty =
+      data.difficulty && (await this.preloadDifficultyByLevel(data.difficulty)); // we do this prealod to verify of the diff exists beforehand if not we create new one
+    const recipe = await this.recipeRepository.preload({
+      id: id,
+      ...data,
+      difficulty: difficulty || undefined,
+    }); //we preload to not have issues with exitance you see this is the safer way
+    if (!recipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+    const result = await this.recipeRepository.save(recipe);
+    if (!result) {
+      throw new HttpException('Error updating recipe', 500);
+    }
+    return 'Recipe updated successfully';
+  }
+```
+
+## Delete Function 
+To Delete a recipe simply we delete the recipe in out ase we dont need to cascade the delete because the if we delete the recipe we dont expect the difficulty to be deleted from the difficulty table.
+
+```typescript
+async deleteRecipe(id: string): Promise<string> {
+    const recipe = await this.getRecipeById(id);
+
+    try {
+      const removed = await this.recipeRepository.remove(recipe);
+      /*
+    the try catch wrappings being handled like this 
+    because of the race condition the recipe mght have
+    been deleted between readings or whatever but if you
+    want to check if there wasa conection error or 
+    a timeout or whatever db error you had this would be 
+    the best case to handle it remember this  
+    */
+      if (!removed) {
+        throw new NotFoundException('Recipe not found');
+      }
+
+      return 'Recipe deleted successfully';
+    } catch (error) {
+      throw new HttpException('Error deleting recipe', 500);
+    }
+  }
+```
+
+# 4.Basic Error Handling
+
+We can do basic error handling with try catch blocks nothing to new in that but we have a new thing we can customize the error thrown by using these new Error types 
+
+```typescript
+throw new NotFoundException('Recipe not found');
+throw new HttpException('Error deleting recipe', 500);
+//and many more 
+```
+# 5.Transactions
+Transactions are soo important to understand in data bases they bascially a bunch of queries that happens at once and if one of them dont succeed the whole batch of opertaion will notbe accepted and the changes willbe rolled back 
+
+we define it by creaing a data object called a query runner. 
+we create it from the DataSource Object class from typeorm. 
+
+we create one with that datasrouce we connect using one of our connections in the connections pool, then we start recoring the transaction.
+
+Think of it as a to do list or a book of orders in our example below we will define bulk recipe creation,  by registering each recipe creation function and setting it up and then if one of them failed we stop the transaction and roll back the changes.
 
 
-# Migrations
+```typescript
+async createBulkRecipes(recipes: CreateRecipeDto[]): Promise<Recipe[]> {
+    if (recipes.length === 0) {
+      throw new HttpException('No recipes to insert', 400);
+    }
+
+    //we define the query runner here 
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const createdRecipes: Recipe[] = [];
+      const difficultyLevels = [
+        ...new Set(recipes.map((recipe) => recipe.difficulty)),
+      ];//we create a simple set for all the difficutlies to not do somany preloads request to the db
+      const difficulties = await Promise.all(
+        difficultyLevels.map((level) => this.preloadDifficultyByLevel(level)),
+      );//we request the difficulties needed in the recipes 
+
+      const difficultyMap = new Map<string, Difficulty>();
+      difficulties.forEach((diff) => difficultyMap.set(diff.level, diff));//we put them in a map for easier access by level as the key
+
+      for (const recipeData of recipes) {
+        //in this loop we will register all the transactions that we need 
+        const difficulty = difficultyMap.get(recipeData.difficulty);
+        if (!difficulty) {
+          throw new HttpException(
+            `Difficulty ${recipeData.difficulty} not found`,
+            400,
+          );
+        }
+        //we save the create function to the query runner here 
+        const recipe = queryRunner.manager.create(Recipe, {
+          ...recipeData,
+          difficulty,
+        });
+        //we save the save funcion to the query runner here 
+        const savedRecipe = await queryRunner.manager.save(recipe);
+        createdRecipes.push(savedRecipe);
+      }
+
+      await queryRunner.commitTransaction();
+      return createdRecipes;
+    } catch (error) {
+      //we roll back the changes if one of them didnt work 
+      await queryRunner.rollbackTransaction();
+
+      console.log(error);
+      throw new HttpException('Error inserting bulk recipes', 500);
+    } finally {
+      //we release the connection and giving it back to the pool to be used (ps this is the lock concept from systems programing) 
+      await queryRunner.release();
+    }
+  }
+  ```
+  To put it simply, we are just registering a bunch of queries and executing them at once like this:
+
+- Create recipe1
+- Save recipe1
+- Create recipe2
+- Save recipe2
+- ... and so on
+
+# 6.Pagination
+Pagiation is a common practice in backend systems, its goal is to help reduce qeury data gotten on the db for example instead of getting the whole data from the db especially if you have thusands or milions of rows in the case of postgres from previous tests when it cracks the 10 thousands it starts to take noticablly longer time.<br>
+
+- So to counter act this we use pagination to get a specific **Page** from the Data base hence the name **Pagination** we get a limited chunk of the db lets say from row 15 to row 20.<br>
+
+- we do this by sending in the query parameters the limit and offset the limit represents the max ammount of data we can get , the offset represents how much data we need to skip to a certain row.<br>
+
+- Note that for this to work we need to order the data because postgres doesnt retain the order of elements if you used a uuid id it my do that if its incremental id.
+
+```typescript
+ async getAllRecipes(paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
+    const { limit, offset } = paginationQuery;
+
+    const results = await this.recipeRepository.find({
+      skip: offset,
+      take: limit,
+      order : {
+        id : "ASC"//i used this becuse the guy used id inc and for me i dont have them sorted when they come put so basically that wouldnt work when you try to paginate it works only on sorted data 
+      }
+    });
+    return results;
+  }
+```
+Note we need to define a DTO for the pagination in our case its gonna be as simple as a limit and an offset but this approach can change depending on your needs 
+```typescript
+import { Type } from "class-transformer";
+import { IsOptional, IsPositive } from "class-validator";
+
+export class PaginationQueryDto {
+    @IsOptional()
+    @IsPositive()
+    limit: number;
+
+    @IsOptional()
+    @IsPositive()
+    offset: number;
+}
+```
+
+# 7.Simple Event Handling
+Event handling is the way that we can record events that happend in our app for example if our user recomeds a recipe we need to save that event to the data abse and increment the recomendations too.
+
+for this we need to create a new entity to save events.
+```typescript
+import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+
+@Index(['name', 'type'])
+@Entity('events')
+export class Event {
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    @Column()
+    type: string;
+
+    @Index()
+    @Column()
+    name: string;
+
+    @Column({type: 'json'})//this payload will be the event specific data its not ormalized in this case 
+    payload: Record<string, any>;
+}
+```
+then to save an event we use the Transaction model we discussed earlier 
+to increment the recomendations number in the recipe and to record that speicific event.
+```typescript
+async recomendRecipe(recipeId: RecomendRecipeDto): Promise<void> {
+    const recipe = await this.getRecipeById(recipeId.id);
+     //this is basics of transactions with query runners with new versions they changes the connection object to Datasource 
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      recipe.recomendations++;
+      
+      const recomendEvent = new Event();
+      recomendEvent.name = 'recommend_recipe';
+      recomendEvent.type = 'recipe';
+      recomendEvent.payload = { recipeId: recipe.id };
+
+      await queryRunner.manager.save(recipe);
+      await queryRunner.manager.save(recomendEvent);
+      await queryRunner.commitTransaction();
+
+      
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.log(error.message);
+      throw new HttpException('Error recommending recipe', 500);
+
+    }
+    finally{
+      await queryRunner.release();
+    }
+  }
+```
+- Note that in such cases its better to use NoSQL data bases because frequesnt updates can hurt performance to the db generally in the case of likes and follows for example in a socila media platform you should use a NoSQL DB for such workloads or you can mix and match Db even using redis.
+
+
+
+# 8.Migrations
 
 this will document how we create migrations in typeorm 
 Migrations are like git commits they for version controll of the DataBase schema.<br>
