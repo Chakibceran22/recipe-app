@@ -20,6 +20,7 @@ const MainConten = ({filteredRecipes, setSelectedRecipe, getDifficultyColor}:{
                   <img
                     src={recipe.image}
                     alt={recipe.title}
+                    loading="lazy"
                     className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3">

@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { Recipe } from './entities/recipe.entity';
 import { CreateRecipeDto } from './dto/create-recipe/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto/update-recipe.dto';
@@ -8,6 +8,7 @@ import { Difficulty } from './entities/difficulty.entity';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { Event } from 'src/events/entities/event.entity/event.entity';
 import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
+import { CUISINES } from './providers/cuisines.provider';
 @Injectable()
 export class RecipesService {
   constructor(
@@ -16,8 +17,10 @@ export class RecipesService {
     @InjectRepository(Difficulty)
     private readonly difficultyRepository: Repository<Difficulty>,
     private readonly dataSource: DataSource,
+    @Inject(CUISINES) private readonly cuisines: string[], //i will keep this here to showcase how we inject custom providers through the app 
     
-  ) {}
+  ) {
+  }
   async getRecipeById(id: string): Promise<Recipe> {
     const result = await this.recipeRepository.findOne({
       where: { id },
@@ -80,9 +83,9 @@ export class RecipesService {
       const removed = await this.recipeRepository.remove(recipe);
       /*
     the try catch wrappings being handled like this 
-    because of the race condition the recipe mght have
+    because of the race condition the recipe might have
     been deleted between readings or whatever but if you
-    want to check if there wasa conection error or 
+    want to check if there was a conection error or 
     a timeout or whatever db error you had this would be 
     the best case to handle it remember this  
     */
@@ -177,11 +180,11 @@ export class RecipesService {
   }
 
   private async preloadDifficultyByLevel(level: string): Promise<Difficulty> {
-    const existingFlavor = await this.difficultyRepository.findOne({
+    const existingDifficulty = await this.difficultyRepository.findOne({
       where: { level },
     });
-    if (existingFlavor) {
-      return existingFlavor;
+    if (existingDifficulty) {
+      return existingDifficulty;
     }
     return this.difficultyRepository.save({ level });
   }

@@ -644,3 +644,127 @@ Then you eun this command to commit the migration
 ```bash
 npx typeorm migration:run -d <Data Source file path>
 ```
+
+
+# 9.Dependency Injection Deeper Analysis:
+
+Dependency injection is handled by Nest's Ioc Container, which a global container or runtime in the nest app that coordinates between DI Containers, and those containers are modules based containers that handles the Dependency injection for that single module only and then Ioc System coordinates with them.
+
+In Short, Ioc Container has the global dependency graph that shows what modules depened on and what providers need as dependencies, then it manages calls recursivly from diffrent modules which ask for here respective dependencies.
+
+To handle these calls, Nests' Ioc COntainer contains a  map of all cached provider's Instances Map<Token, Instance> , this map is created as follows:
+ - A modules asks for providers before being loaded.
+ - if the provider doesnt exist Nest's Ioc Container creates a singleton instance of that provider.
+ - saves it in an in memory cahce using js objects.
+ - identifies it with a token in the map.
+
+
+```bash
+AppModule (Root Injector)
+│
+├── UsersModule (Injector)
+│     ├── UsersService
+│     └── UsersRepository
+│
+├── AuthModule (Injector)
+│     ├── AuthService(Calls later ConfigService)
+│     └── JwtService
+│
+└── SharedModule (Injector)
+      └── ConfigService
+```
+
+- In this Example the App module is loaded so Nest create a DI Container for it
+- Then the App modules needs UserModule as its dependency so Nest creates a new DI Container to handlethe Injection of UserModule
+
+- User Module Depends on UserService and UserRepo so its DI Container creates the instance of the class and passes it to the Ioc Container to be cahced in the Map , same with UserRepo
+
+- AuthModule will have the same effect as UserModule but with a catch the AuthService depends on SharedModule's ConfigService so what does it do the DI container of AuthModule calls the Shared Module DI Container which this is orchestraited by the global Ioc container, to request the instance of the ConfigService.
+
+# 10.Providers Scopes And Dynamic Modules
+## a.Providers Scope;
+
+we define a provider scope as the type of inantitation for that provider when its injected in other dependencies, we find three scopes:
+
+### Default:
+The default one is a singleton instance of the class and its the default behaviour for the provider and the most recomended one due to meemory optimization as we will see the other modules are not memory efficient.
+
+### Transient:
+Transient scope is for each time the provider is injected into a consmer, it will create a unique instance for that specific consumer, its mainly used for loggers when we want the loggers to be unique for each.
+```typescript
+@Injectable({scope: Scope.TRANSIENT})
+class LoggerService {
+  log(message: string) {
+    console.log(message);
+  }
+
+}
+```
+
+### Request
+Request scope, is we instanciate the provider for each request and as you can see thiw will be a nightmare for memory because for each incoming request we instantiate the provider so if we have a 3 thousand requests at one time we would have 3 thousand active providers, and side note they are garbage collected so after the end of each request the provider will be deleted. The special feture about this scope is that you will have access to the request object and it can be injected directly into any dependency.
+```typescript
+@Injectable({ scope: Scope.REQUEST })
+export class RequestContext {
+  constructor(@Inject(REQUEST) private request: Request) {}
+
+  getRequestId() {
+    return this.request.headers['x-request-id'] || uuidv4();
+  }
+}
+
+@Injectable({ scope: Scope.REQUEST })
+export class LoggerService {
+  constructor(private context: RequestContext) {}
+
+  log(message: string) {
+    console.log(`[${this.context.getRequestId()}] ${message}`);
+  }
+}
+```
+
+### Warning 
+Provider scopes do bubble up onto the chain of the dependencies so if the scope of the consumer that inject and uses that provider , imagine if we have UserService service class and its of scope request , the controller that will use this service will also be request so it will be instanciated for each request so that is a big nightmare for the memory.
+
+## b.Dynamic Modules 
+dynamic modules represent flexible non static modules that will behave like a plugin system , lets say you need a module that depends on env vars that module wont be static but dynamic.
+
+```typescript
+import { Module, DynamicModule } from '@nestjs/common';
+
+@Module({})
+export class MyDynamicModule {
+  static register(options: { apiKey: string }): DynamicModule {
+    return {
+      module: MyDynamicModule,
+      providers: [
+        {
+          provide: 'API_KEY',
+          useValue: options.apiKey,
+        },
+      ],
+      exports: ['API_KEY'],
+    };
+  }
+}
+```
+```typescript 
+@Module({
+  imports: [
+    MyDynamicModule.register({
+      apiKey: '12345-SECRET-KEY',
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+# 11.Config Module
+This is how nest handle diffrent env configurations
+we start by installing it 
+```bash
+npm i @nestjs/config
+```
+we need to register this module in the app module
+
+
