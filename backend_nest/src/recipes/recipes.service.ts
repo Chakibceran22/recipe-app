@@ -9,6 +9,7 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { Event } from 'src/events/entities/event.entity/event.entity';
 import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
 import { CUISINES } from './providers/cuisines.provider';
+
 @Injectable()
 export class RecipesService {
   constructor(
@@ -18,7 +19,6 @@ export class RecipesService {
     private readonly difficultyRepository: Repository<Difficulty>,
     private readonly dataSource: DataSource,
     @Inject(CUISINES) private readonly cuisines: string[], //i will keep this here to showcase how we inject custom providers through the app 
-    
   ) {
   }
   async getRecipeById(id: string): Promise<Recipe> {

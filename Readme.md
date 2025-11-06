@@ -765,6 +765,78 @@ we start by installing it
 ```bash
 npm i @nestjs/config
 ```
-we need to register this module in the app module
+we need to register this module in the app module like so we can pass some propreties like **isGlobal** if we want to make it Globaly used by our app 
 
+As the best practice to use ConfigureModule by using it with the ConfigService when working with the env file if you are working with custom config files there is another treatement.
+```typescript
+@Module({
+  imports: [RecipesModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: Joi.object({
+        DATABASE_HOST: Joi.string().required(),
+        DATABASE_PORT: Joi.number().required(),
+        DATABASE_USERNAME: Joi.string().required(),
+        DATABASE_PASSWORD: Joi.string().required(),
+        DATABASE_NAME: Joi.string().required(),
+
+      })
+    })
+    ,TypeOrmModule.forRootAsync({
+      imports:[ConfigModule],
+      inject:[ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DATABASE_HOST'),
+        port: configService.get<number>('DATABASE_PORT'),
+        username: configService.get<string>('DATABASE_USERNAME'),
+        password: configService.get<string>('DATABASE_PASSWORD'),
+        database: configService.get<string>('DATABASE_NAME'),
+        autoLoadEntities: true,
+        synchronize: true,
+      })
+    
+  })],
+})
+```
+
+Notice that we are using ConfigService with get and injecting it using the useFactory , we use Joi in the configModule for defineing a clear schema that we want to use in our .env file.
+
+But we dont usually want to use one env file , we can use multiple config files for speicifc domains , lets say the recipes domain need some kind of specific configurations. 
+
+Nesxt we will see how we handle this by creating specific config files and injecting there values with the ConfigService and ConfigModule as follows.
+
+- Suppose we have some kind of config in the recipes domain like this in the recipe.config.ts
+
+```typescript
+import { registerAs } from "@nestjs/config"
+
+export default registerAs('recipes', () => ({
+    coffeeApiKey: "the api key that would be in the env ",
+    coffeeApiUrl: "The Url that would be i the env",
+}))
+```
+we use the register as method to createthis **namespace** this will later be injected in the service we need to use it in 
+
+```typescript
+
+export class RecipesService {
+  constructor(
+    @InjectRepository(Recipe)
+    private readonly recipeRepository: Repository<Recipe>,
+    @InjectRepository(Difficulty)
+    private readonly difficultyRepository: Repository<Difficulty>,
+    private readonly dataSource: DataSource,
+    @Inject(CUISINES) private readonly cuisines: string[], //i will keep this here to showcase how we inject custom providers through the app 
+    @Inject(recipesConfig.KEY)
+    private readonly recipesConfiguration: ConfigType<typeof recipesConfig>
+  ) {
+    /*notice that here it gives ud full control over
+    labels inside of the recipesConfiguration we can 
+    access them in a typesafe way*/ 
+
+    console.log(recipesConfiguration.coffeeApiKey)
+  }
+}
+```
 
