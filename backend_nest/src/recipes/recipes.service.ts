@@ -9,6 +9,8 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { Event } from 'src/events/entities/event.entity/event.entity';
 import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
 import { CUISINES } from './providers/cuisines.provider';
+import recipesConfig from './config/recipes.config';
+import { ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class RecipesService {
@@ -19,7 +21,10 @@ export class RecipesService {
     private readonly difficultyRepository: Repository<Difficulty>,
     private readonly dataSource: DataSource,
     @Inject(CUISINES) private readonly cuisines: string[], //i will keep this here to showcase how we inject custom providers through the app 
+    @Inject(recipesConfig.KEY)//this is how you define a config injection for a specific module or domaine with typeproofing
+    private readonly recipeConfig: ConfigType<typeof recipesConfig>
   ) {
+    console.log(recipeConfig.coffeeApiKey);
   }
   async getRecipeById(id: string): Promise<Recipe> {
     const result = await this.recipeRepository.findOne({
