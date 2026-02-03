@@ -14,6 +14,7 @@ import { CreateRecipeDto } from './dto/create-recipe/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto/update-recipe.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
+
 @Controller('recipes')
 export class RecipesController {
   constructor(private readonly reciperService: RecipesService) {}
@@ -30,7 +31,6 @@ export class RecipesController {
   async createRecipe(
     @Body() createRecipeDto: CreateRecipeDto,
   ): Promise<Recipe> {
-    console.log(createRecipeDto instanceof CreateRecipeDto);
     return this.reciperService.createRecipe(createRecipeDto);
   }
   @Post('bulk')

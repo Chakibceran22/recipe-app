@@ -221,7 +221,7 @@ const CreateRecipeForm = ({
                       key={diff}
                       type="button"
                       onClick={() =>
-                        setFormData((prev) => ({ ...prev, difficulty: diff }))
+                        setFormData((prev: any) => ({ ...prev, difficulty: diff }))
                       }
                       className={`p-2 text-xs font-medium border rounded-lg transition-colors ${
                         formData.difficulty === diff
@@ -229,7 +229,7 @@ const CreateRecipeForm = ({
                           : "border-gray-300 text-gray-600 hover:border-gray-400"
                       }`}
                     >
-                      {diff}
+                      {diff}``
                     </button>
                   ))}
                 </div>
