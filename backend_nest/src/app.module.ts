@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RecipesModule } from './recipes/recipes.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import appConfig from './config/app.config';
 import * as Joi from 'joi'
+import { APP_PIPE } from '@nestjs/core';
 
 @Module({
   imports: [RecipesModule,
@@ -33,6 +34,6 @@ import * as Joi from 'joi'
         synchronize: true,
       })
     
-  })],
+  })]
 })
 export class AppModule {}

@@ -4,8 +4,11 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  ParseUUIDPipe,
   Patch,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Get, Post, Param } from '@nestjs/common';
 import { RecipesService } from './recipes.service';
@@ -14,16 +17,20 @@ import { CreateRecipeDto } from './dto/create-recipe/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto/update-recipe.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('recipes')
 @Controller('recipes')
 export class RecipesController {
   constructor(private readonly reciperService: RecipesService) {}
+  @ApiOperation({ summary: 'Get all recipes with pagination' })
+  @ApiResponse({ status: 200, description: 'List of recipes' , type: [Recipe] })
   @Get()
   async getRecipes(@Query() paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
     return this.reciperService.getAllRecipes(paginationQuery);
   }
   @Get(':id')
-  async getRecipeById(@Param('id') id: string): Promise<Recipe> {
+  async getRecipeById(@Param('id', ParseUUIDPipe) id: string): Promise<Recipe> {
     return this.reciperService.getRecipeById(id);
   }
 
