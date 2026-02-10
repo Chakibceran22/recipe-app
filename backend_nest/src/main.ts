@@ -38,7 +38,7 @@ async function bootstrap() {
       spec: {
         content: document,
       },
-      theme: 'purple',  // purple, moon, kepler, saturn, bluePlanet
+      theme: 'bluePlanet',  // purple, moon, kepler, saturn, bluePlanet
       darkMode: true,
       layout: 'modern',
     }),

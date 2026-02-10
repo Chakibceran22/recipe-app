@@ -16,6 +16,7 @@ import { APP_PIPE } from '@nestjs/core';
         DATABASE_USERNAME: Joi.string().required(),
         DATABASE_PASSWORD: Joi.string().required(),
         DATABASE_NAME: Joi.string().required(),
+        MY_API_KEY: Joi.string().required(),
 
       }),
       load:[appConfig]

@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -18,22 +19,32 @@ import { UpdateRecipeDto } from './dto/update-recipe.dto/update-recipe.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiKeyGuard } from 'src/common/guards/api-key/api-key.guard';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('recipes')
 @Controller('recipes')
 export class RecipesController {
   constructor(private readonly reciperService: RecipesService) {}
+
+
   @ApiOperation({ summary: 'Get all recipes with pagination' })
   @ApiResponse({ status: 200, description: 'List of recipes' , type: [Recipe] })
+
+  @Public()
+  @UseGuards(ApiKeyGuard)
   @Get()
   async getRecipes(@Query() paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
+    
     return this.reciperService.getAllRecipes(paginationQuery);
   }
+
+  
   @Get(':id')
   async getRecipeById(@Param('id', ParseUUIDPipe) id: string): Promise<Recipe> {
     return this.reciperService.getRecipeById(id);
   }
-
+  
   @Post()
   async createRecipe(
     @Body() createRecipeDto: CreateRecipeDto,
