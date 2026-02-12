@@ -4,6 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
+import { WrapResponseInterceptor } from './common/interceptors/wrap-response/wrap-response.interceptor';
+import { TimoutInterceptor } from './common/interceptors/timout/timout.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,13 +18,13 @@ async function bootstrap() {
     transform : true,//this will istanciate the javascript object that we get through the requests into its current dto 
   }))
   app.useGlobalFilters(new HttpExceptionFilter())
+  app.useGlobalInterceptors(new WrapResponseInterceptor(), new TimoutInterceptor())
   app.enableCors({ 
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   })
 
-  //this is fr docuemntation using nest and swagger
 
   const config = new DocumentBuilder()
     .setTitle('Recipes API')
@@ -47,3 +49,13 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Promise Rejection:', reason)
+  // Log to monitoring, alert team, graceful shutdown
+})
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error)
+  console.error('Shutting down due to uncaught exception')
+  process.exit(1)
+})

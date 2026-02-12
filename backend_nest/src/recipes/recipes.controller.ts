@@ -21,6 +21,9 @@ import { RecomendRecipeDto } from './dto/recomend-recipe/recomend-recipe.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from 'src/common/guards/api-key/api-key.guard';
 import { Public } from 'src/common/decorators/public.decorator';
+import { resolve } from 'path';
+import { ParseIntPipe } from 'src/common/pipes/parse-int/parse-int.pipe';
+import { Protocol } from 'src/common/decorators/protocol.decorator';
 
 @ApiTags('recipes')
 @Controller('recipes')
@@ -31,11 +34,10 @@ export class RecipesController {
   @ApiOperation({ summary: 'Get all recipes with pagination' })
   @ApiResponse({ status: 200, description: 'List of recipes' , type: [Recipe] })
 
-  @Public()
   @UseGuards(ApiKeyGuard)
   @Get()
-  async getRecipes(@Query() paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
-    
+  async getRecipes(@Protocol() protocol: string, @Query() paginationQuery: PaginationQueryDto): Promise<Recipe[]> {
+    console.log(`Request made with protocol: ${protocol}`);
     return this.reciperService.getAllRecipes(paginationQuery);
   }
 
@@ -44,6 +46,12 @@ export class RecipesController {
   async getRecipeById(@Param('id', ParseUUIDPipe) id: string): Promise<Recipe> {
     return this.reciperService.getRecipeById(id);
   }
+
+  @Get('test/:number')
+  async getRecipeByIdTest(@Param('number', ParseIntPipe) number: number): Promise<string> {
+    return `The number is ${number}`;
+  }
+  
   
   @Post()
   async createRecipe(

@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import appConfig from './config/app.config';
 import * as Joi from 'joi'
 import { APP_PIPE } from '@nestjs/core';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [RecipesModule,
@@ -35,6 +36,6 @@ import { APP_PIPE } from '@nestjs/core';
         synchronize: true,
       })
     
-  })]
+  }), CommonModule]
 })
 export class AppModule {}
